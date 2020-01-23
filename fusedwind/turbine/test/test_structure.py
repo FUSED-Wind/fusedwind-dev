@@ -105,3 +105,11 @@ class StructureTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    # data_version_0 = 'data'
+    # data_version_1 = 'data_version_1'
+    # data_version_2 = 'data_version_2'
+    # blade = 'DTU10MW'
+    # test_dir = 'test_dir'
+    # st3d = read_bladestructure(os.path.join(data_version_2, blade))
+    # write_bladestructure(st3d, os.path.join(test_dir, 'test'))
+    # st3dn = read_bladestructure(os.path.join(test_dir, 'test'))

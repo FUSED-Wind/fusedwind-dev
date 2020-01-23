@@ -16,7 +16,7 @@ try:
     _PGL_installed = True
 except:
     _PGL_installed = False
-    print 'warning: PGL not installed'
+    print('warning: PGL not installed')
 
 
 class SplineBase(object):
@@ -275,7 +275,7 @@ def write_blade_planform(pf, filename):
         try:
             data[:, i] = pf[name]
         except:
-            print 'failed writing %s - assuming zeros' % name
+            print('failed writing %s - assuming zeros' % name)
             data[:, i] = np.zeros(s.shape[0])
     fid = open(filename, 'w')
     exp_prec = 15             # exponential precesion
@@ -464,11 +464,11 @@ class PGLRedistributedPlanform(Component):
             pf = redistribute_planform(pf_in, s=self.s_new, spline_type=self.spline_type)
         else:
             pf = {}
-            for k, v in pf_in.iteritems():
+            for k, v in pf_in.items():
                 spl = pchip(pf_in['s'], v)
                 pf[k] = spl(self.s_new)
 
-        for k, v in pf.iteritems():
+        for k, v in pf.items():
             unknowns[k+self._suffix] = v
         unknowns['athick'+self._suffix] = pf['chord'] * pf['rthick']
 
@@ -683,9 +683,9 @@ class SplinedBladePlanform(Group):
 
     def configure(self):
 
-        print 'SplinedBladePlanform: No harm done, but configure is depreciated\n' + \
+        print('SplinedBladePlanform: No harm done, but configure is depreciated\n' + \
               'and replaced by pre_setup called automatically by OpenMDAO.\n'+\
-              'Ensure that you have OpenMDAO > v1.7.1 installed'
+              'Ensure that you have OpenMDAO > v1.7.1 installed')
 
     def pre_setup(self, problem):
         """
@@ -698,7 +698,7 @@ class SplinedBladePlanform(Group):
                 self.add(name+'_c', IndepVarComp(name, self.pfinit[name]), promotes=[name])
             except:
                 self.add(name+'_c', IndepVarComp(name, np.zeros(self.pfinit['s'].shape[0])), promotes=[name])
-                print 'Failed adding IndepVarComp for %s, assuming zeros' % name
+                print('Failed adding IndepVarComp for %s, assuming zeros' % name)
 
 
         c = self.add('smax_c', ComputeSmax(self.pfinit), promotes=['blade_curve_length'])
@@ -758,11 +758,11 @@ class PGLLoftedBladeSurface(Component):
         self.config['dist_LE'] = np.array([])
         self.config['gf_heights'] = np.array([])
 
-        for k, v in config.iteritems():
-            if k in self.config.keys():
+        for k, v in config.items():
+            if k in list(self.config.keys()):
                 self.config[k] = v
             else:
-                print 'unknown config key %s' % k
+                print('unknown config key %s' % k)
 
         self.rot_order = np.array([2,1,0])
 

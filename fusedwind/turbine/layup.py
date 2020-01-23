@@ -1,6 +1,6 @@
 import numpy as np
 from collections import OrderedDict
-import cPickle
+import pickle
 
 
 class Material(object):
@@ -373,7 +373,7 @@ class Region(object):
         :return: The layer added to the region
         '''
         dubl = 0
-        for k in self.layers.iterkeys():
+        for k in self.layers.keys():
             if name == k[:-2]:
                 dubl += 1
 
@@ -391,7 +391,7 @@ class Region(object):
         :return: angle_matrix: 2d np.array containing angles of all layers (size: no_layers,s)
         '''
         thickmatdata = []
-        for v in self.layers.itervalues():
+        for v in self.layers.values():
             thickmatdata.append(v.thickness)
         self.thick_matrix = np.fliplr(np.rot90(np.array(thickmatdata), -1))
 
@@ -401,7 +401,7 @@ class Region(object):
         self.thick_max = np.array(thickmaxdata)
 
         anglematdata = []
-        for v in self.layers.itervalues():
+        for v in self.layers.values():
             anglematdata.append(v.angle)
         self.angle_matrix = np.fliplr(np.rot90(np.array(anglematdata), -1))
 
@@ -533,70 +533,70 @@ class BladeLayup(object):
         '''
         print('Starting consistency check of BladeLayup.')
         #  check BladeLayup attributes
-        for attr, val in self.__dict__.iteritems():
+        for attr, val in self.__dict__.items():
             if val is None:
                 self._warns += 1
-                print('Attribute %s is not set.') % (attr)
+                print(('Attribute %s is not set.') % (attr))
 
         # check material attributes
-        for km, vm in self.materials.iteritems():
-            for attr, val in vm.__dict__.iteritems():
+        for km, vm in self.materials.items():
+            for attr, val in vm.__dict__.items():
                 if val is None:
                     self._warns += 1
-                    print('%s\'s attribute %s is not set.') % (km, attr)
+                    print(('%s\'s attribute %s is not set.') % (km, attr))
 
         # calc BladeLayup's s length
         len_s = len(self.s)
         # check DPs
-        for dpk, dpv in self.DPs.iteritems():
+        for dpk, dpv in self.DPs.items():
             # check DP attributes
-            for attr, val in dpv.__dict__.iteritems():
+            for attr, val in dpv.__dict__.items():
                 if val is None:
                     self._warns += 1
-                    print('%s\'s attribute %s is not set.') % (dpk, attr)
+                    print(('%s\'s attribute %s is not set.') % (dpk, attr))
             # check DP lengths
             len_dp = len(dpv.arc)
             if len_dp != len_s:
                 self._warns += 1
-                print('%s\'s size (%s) is unequal to size of s (%s).') % (
-                    dpk, len_dp, len_s)
+                print(('%s\'s size (%s) is unequal to size of s (%s).') % (
+                    dpk, len_dp, len_s))
 
         def _check_regions(dictionary):
             ''' Check regions' consistency.
 
             :param dictionary: self.regions or self.webs or self.bonds
             '''
-            for rk, rv in dictionary.iteritems():
+            for rk, rv in dictionary.items():
                 # check dictionary attributes
-                for attr, val in rv.__dict__.iteritems():
+                for attr, val in rv.__dict__.items():
                     if val is None:
                         self._warns += 1
-                        print('%s\'s attribute %s is not set.') % (rk, attr)
-                for lk, lv in rv.layers.iteritems():
+                        print(('%s\'s attribute %s is not set.') % (rk, attr))
+                for lk, lv in rv.layers.items():
                     # check layer attres
-                    for attr, val in lv.__dict__.iteritems():
+                    for attr, val in lv.__dict__.items():
                         if val is None:
                             self._warns += 1
-                            print('%s\'s %s attribute %s is not set.') % (
-                                rk, lk, attr)
+                            print(('%s\'s %s attribute %s is not set.') % (
+                                rk, lk, attr))
                     # check if layer's materials exist
                     # note: last two digits comply layer nr.
-                    if lk[:-2] not in self.materials.iterkeys():
+                    if lk[:-2] not in iter(self.materials.keys()):
                         # if lk not in self.materials.iterkeys():
                         self._warns += 1
-                        print('%s\'s %s does not exist in materials dict.') % (
-                            rk, lk[:-2])
+                        print(('%s\'s %s does not exist in materials dict.') % (
+                            rk, lk[:-2]))
                     # check vector lengths
                     len_thick = len(lv.thickness)
                     len_ang = len(lv.angle)
                     if len_thick != len_s:
                         self._warns += 1
-                        print('%s\'s %s thickness size (%s) is unequal to size of s (%s).') % (
-                            rk, lk, len_thick, len_s)
+                        print(('%s\'s %s thickness size (%s) is unequal to size of s (%s).') % (
+                            rk, lk, len_thick, len_s))
                     if len_ang != len_s:
                         self._warns += 1
-                        print('%s\'s %s angle size (%s) is unequal to size of s (%s).') % (
-                            rk, lk, len_ang, len_s)
+                        print(('%s\'s %s angle size (%s) is unequal to size of s (%s).') % (
+                            rk, lk, len_ang, len_s))
 
         # check surface regions and webs
         _check_regions(self.regions)
@@ -605,7 +605,7 @@ class BladeLayup(object):
             _check_regions(self.bonds)
 
         if self._warns:
-            print('%s inconsistencies detected!' % self._warns)
+            print(('%s inconsistencies detected!' % self._warns))
         else:
             print('OK.')
 
@@ -639,7 +639,7 @@ class BladeLayup(object):
         number_of_lines = len(self.materials)
         mat_colors = [cm(x) for x in np.linspace(start, stop, number_of_lines)]
         cm_dict = {}
-        for i, m in enumerate(self.materials.iterkeys()):
+        for i, m in enumerate(self.materials.keys()):
             cm_dict[m] = mat_colors[i]
 
         page_pos_x = 0.98
@@ -654,7 +654,7 @@ class BladeLayup(object):
             ind = np.arange(N)    # the x locations for the groups
             # the width of the bars: can also be len(x) sequence
             width = 1.0 / N
-            for i, mat_name in enumerate(self.materials.iterkeys()):
+            for i, mat_name in enumerate(self.materials.keys()):
                 plt.bar(
                     ind + i *
                     width, self.materials[mat_name].matprops()[0], width,
@@ -680,7 +680,7 @@ class BladeLayup(object):
             ind = np.arange(N)    # the x locations for the groups
             # the width of the bars: can also be len(x) sequence
             width = 1.0 / N
-            for i, mat_name in enumerate(self.materials.iterkeys()):
+            for i, mat_name in enumerate(self.materials.keys()):
                 plt.bar(
                     ind + i * width, self.materials[mat_name].failmat()[0][:N],
                     width,
@@ -706,7 +706,7 @@ class BladeLayup(object):
             ind = np.arange(N)    # the x locations for the groups
             # the width of the bars: can also be len(x) sequence
             width = 1.0 / N
-            for i, mat_name in enumerate(self.materials.iterkeys()):
+            for i, mat_name in enumerate(self.materials.keys()):
                 plt.bar(
                     ind + i *
                     width, self.materials[mat_name].failmat()[0][N:2 * N],
@@ -734,7 +734,7 @@ class BladeLayup(object):
             ind = np.arange(N)    # the x locations for the groups
             # the width of the bars: can also be len(x) sequence
             width = 1.0 / 9
-            for i, mat_name in enumerate(self.materials.iterkeys()):
+            for i, mat_name in enumerate(self.materials.keys()):
                 plt.bar(
                     ind + i *
                     width, self.materials[
@@ -784,7 +784,7 @@ class BladeLayup(object):
             # list of rthicks and region cum thicknesses
             rthicks = []
             rmaxthicks = []
-            for i, rv in enumerate(reg_type.itervalues()):
+            for i, rv in enumerate(reg_type.values()):
                 # init thicknesses
                 rv.init_stack()
                 rthicks.append(rv.thick_matrix)
@@ -800,7 +800,7 @@ class BladeLayup(object):
                         i0_idents.append(i)
                 rsets.append(i0_idents)
             # remove duplicate entries
-            rsets = map(list, OrderedDict.fromkeys(map(tuple, rsets)))
+            rsets = list(map(list, OrderedDict.fromkeys(list(map(tuple, rsets)))))
             return rsets, rmaxthick
 
         def _plot_region(rsets, reg_type):
@@ -827,7 +827,7 @@ class BladeLayup(object):
                     ax1.plot(
                         [self.s, self.s], [0, maxthick], 'k', linewidth=0.5)
                 t = np.zeros_like(self.s)
-                for k, l in r.layers.iteritems():
+                for k, l in r.layers.items():
                     mat_name = k[:-2]
                     mat_count = k[-2:]
                     if vmode == 'stack':
@@ -940,12 +940,12 @@ def _create_regions(dictionary):
     :return: List of regions
     '''
     regs = []
-    for k, v in dictionary.iteritems():
+    for k, v in dictionary.items():
         r = {}
         r['layers'] = []
         andata = []
         thdata = []
-        for k, v in v.layers.iteritems():
+        for k, v in v.layers.items():
             r['layers'].append(k)
             thdata.append(v.thickness)
             andata.append(v.angle)
@@ -968,13 +968,13 @@ def create_bladestructure(bl):
     st3d['version'] = bl._version
 
     st3d['materials'] = OrderedDict()
-    for i, name in enumerate(bl.materials.iterkeys()):
+    for i, name in enumerate(bl.materials.keys()):
         st3d['materials'][name] = i
 
     matprops = []
     failmat = []
     failcrit = []
-    for v in bl.materials.itervalues():
+    for v in bl.materials.values():
         matprops.append(v.matprops()[0])
         failmat.append(v.failmat()[0])
         failcrit.append(v.failcrit)
@@ -988,7 +988,7 @@ def create_bladestructure(bl):
     st3d['s'] = bl.s
 
     dpdata = []
-    for v in bl.DPs.itervalues():
+    for v in bl.DPs.values():
         dpdata.append(v.arc)
     st3d['DPs'] = np.fliplr(np.rot90(np.r_[dpdata], -1))
 
@@ -1015,7 +1015,7 @@ def create_bladelayup(st3d):
 
     bl.s = st3d['s']
 
-    for i, k in enumerate(st3d['materials'].iterkeys()):
+    for i, k in enumerate(st3d['materials'].keys()):
         mat = bl.add_material(k)
         mat.set_props(E1=st3d['matprops'][i][0],
                       E2=st3d['matprops'][i][1],
@@ -1045,7 +1045,7 @@ def create_bladelayup(st3d):
 
     bl.init_regions(len(st3d['regions']))
 
-    for idp, dp in enumerate(bl.DPs.itervalues()):
+    for idp, dp in enumerate(bl.DPs.values()):
         dp.arc = st3d['DPs'][:, idp]
 
     for ir, reg in enumerate(st3d['regions']):
@@ -1084,7 +1084,7 @@ def pickle_bladelayup(bl):
     '''
 
     with open('bl.pkl', 'wb') as mysavedata:
-        cPickle.dump(bl, mysavedata)
+        pickle.dump(bl, mysavedata)
 
 
 def unpickle_bladelayup():
@@ -1093,5 +1093,5 @@ def unpickle_bladelayup():
     :return: bl
     '''
     with open('bl.pkl', 'rb') as myrestoredata:
-        bl = cPickle.load(myrestoredata)
+        bl = pickle.load(myrestoredata)
     return bl

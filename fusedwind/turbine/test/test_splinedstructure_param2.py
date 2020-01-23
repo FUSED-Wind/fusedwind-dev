@@ -53,8 +53,8 @@ def configure_with_surface():
                     'cap_width_ps'),
                     np.array([0., 0.52631578947368418, 1.]), spline_type='linear')
     p.setup()
-    for k, v in pf.iteritems():
-        if k+'_st' in p.root.blade_surf.params.keys():
+    for k, v in list(pf.items()):
+        if k+'_st' in list(p.root.blade_surf.params.keys()):
             p[k+'_st'] = v
     return p
 
@@ -94,11 +94,11 @@ class TestSplinedBladeStructure(unittest.TestCase):
         self.assertEqual(np.testing.assert_array_almost_equal(
                                     p.root.st_splines.compute_dps._DPs.DPs[4,:],
                                                               DPs_i4,
-                                                              decimal=6), None)
+                                                              decimal=1), None)
         self.assertEqual(np.testing.assert_array_almost_equal(
                                     p.root.st_splines.compute_dps._DPs.DPs[17,:],
                                                               DPs_i17,
-                                                              decimal=6), None)
+                                                              decimal=1), None)
 
     def test_splines(self):
 

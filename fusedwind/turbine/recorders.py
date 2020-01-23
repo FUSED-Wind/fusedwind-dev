@@ -66,7 +66,7 @@ def get_structure_recording_vars(st3d, with_props=False, with_CPs=False):
     recording_vars.append('matprops')
     recording_vars.append('failmat')
     recording_vars.append('s_st')
-    if 'cap_width_ps' in st3d.keys():
+    if 'cap_width_ps' in list(st3d.keys()):
         recording_vars.extend(['cap_center_ps',
                                'cap_center_ss',
                                'cap_width_ps',
@@ -99,7 +99,7 @@ def get_recorded_bladestructure(st3d, db, coordinate):
     stnew['failmat'] = st3d['failmat']
     stnew['web_def'] = st3d['web_def']
     stnew['version'] = st3d['version']
-    if 'cap_width_ps' in st3d.keys():
+    if 'cap_width_ps' in list(st3d.keys()):
         try:
             stnew['dominant_regions'] = st3d['dominant_regions']
             stnew['cap_DPs'] = st3d['cap_DPs']
@@ -115,7 +115,7 @@ def get_recorded_bladestructure(st3d, db, coordinate):
             for i in range(1, len(st3d['web_def'])):
                 stnew['w%02dpos' % i] = data['w%02dpos' % i]
         except:
-            print 'Failed retrieving Param2 structural data from db'
+            print('Failed retrieving Param2 structural data from db')
     nsec = s.shape[0]
     nDP = st3d['DPs'].shape[1]
 
@@ -209,7 +209,7 @@ def get_recorded_planform(db, coordinate):
         try:
             pf[name] = data[name]
         except:
-            print '%s not found in database' % name
+            print('%s not found in database' % name)
             pf[name] = np.zeros(data['x'].shape[0])
 
     s = calculate_length(np.array([pf['x'], pf['y'], pf['z']]).T)

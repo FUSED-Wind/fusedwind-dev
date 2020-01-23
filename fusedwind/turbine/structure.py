@@ -52,14 +52,14 @@ def read_bladestructure(filebase):
             version = int(headerline[1])
             # check for files consistency
             if version != st3d['version'] and st3d['version'] is not None:
-                print('Warning: Files not all consistent in version %s!' % version)
+                print(('Warning: Files not all consistent in version %s!' % version))
 
             st3d['version'] = version
         else:
             version = 0
             # check for files consistency
             if version != st3d['version'] and st3d['version'] is not None:
-                print('Warning: Files not all consistent in version %s!' % version)
+                print(('Warning: Files not all consistent in version %s!' % version))
 
             st3d['version'] = version # version 0 for files before file version tagging
         return version
@@ -90,6 +90,7 @@ def read_bladestructure(filebase):
         st3d['materials'][name] = i
     data = np.loadtxt(fid)
     st3d['matprops'] = data
+    fid.close()
 
     # read failmat file
     failcrit = {1:'maximum_strain', 2:'maximum_stress', 3:'tsai_wu'}
@@ -105,6 +106,7 @@ def read_bladestructure(filebase):
     st3d['failcrit'] = [failcrit[mat] for mat in data[:, 0]]
     # read the dp3d file containing region division points
     dpfile = filebase + '.dp3d'
+    fid.close()
 
     dpfid = open(dpfile, 'r')
     first_line = dpfid.readline().split()[1:]
@@ -146,6 +148,7 @@ def read_bladestructure(filebase):
         regions = ['region%02d' % i for i in range(nreg)]
     st3d['s'] = dpdata[:, 0]
     st3d['DPs'] = dpdata[:, 1:]
+    dpfid.close()
 
     # check if a geo3d file containing region param2 input exists
     pfile = filebase + '.geo3d'
@@ -222,6 +225,7 @@ def read_bladestructure(filebase):
         else:
             r['angles'] = np.zeros((cldata.shape[0], nl))
         st3d['regions'].append(r)
+        fid.close()
 
     st3d['webs'] = []
     for i, rname in enumerate(wnames):
@@ -267,6 +271,7 @@ def read_bladestructure(filebase):
         else:
             r['angles'] = np.zeros((cldata.shape[0], nl))
         st3d['webs'].append(r)
+        fid.close()
 
     if bondline:
         st3d['bonds'] = []
@@ -291,6 +296,7 @@ def read_bladestructure(filebase):
             else:
                 r['angles'] = np.zeros((cldata.shape[0], nl))
             st3d['bonds'].append(r)
+            fid.close()
 
     return st3d
 
@@ -311,10 +317,11 @@ def write_bladestructure(st3d, filebase):
     # write material properties
     fid = open(filebase + '.mat', 'w')
     fid.write('# version %s\n' % st3d['version'])
-    fid.write('# %s\n' % (' '.join(st3d['materials'].keys())))
+    fid.write('# %s\n' % (' '.join(list(st3d['materials'].keys()))))
     fid.write('# E1 E2 E3 nu12 nu13 nu23 G12 G13 G23 rho\n')
     fmt = ' '.join(10*['%.20e'])
     np.savetxt(fid, st3d['matprops'], fmt=fmt)
+    fid.close()
 
     failcrit = dict(maximum_strain=1, maximum_stress=2, tsai_wu=3)
     fid = open(filebase + '.failmat', 'w')
@@ -328,6 +335,7 @@ def write_bladestructure(st3d, filebase):
     data[:, 1:] = st3d['failmat']
     fmt = '%i ' + ' '.join(23*['%.20e'])
     np.savetxt(fid, np.asarray(data), fmt=fmt)
+    fid.close()
 
     # write dp3d file with region division points
     fid = open(filebase + '.dp3d', 'w')
@@ -349,7 +357,7 @@ def write_bladestructure(st3d, filebase):
     fid.close()
 
     # write geo3d file
-    if 'cap_width_ps' in st3d.keys():
+    if 'cap_width_ps' in list(st3d.keys()):
         fid = open(filebase + '.geo3d', 'w')
         fid.write('# version %s\n' % st3d['version'])
         fid.write('# struct_angle %24.15f\n' % st3d['struct_angle'])
@@ -459,7 +467,7 @@ def interpolate_bladestructure(st3d, s_new):
             tck = pchip(sorg, st3d[name])
             st3dn[name] = tck(s_new)
     except:
-        print 'no geo3d data'
+        print('no geo3d data')
 
     st3dn['regions'] = []
     st3dn['webs'] = []
@@ -605,7 +613,7 @@ class ComputeDPsParam2(object):
                 name = 'w%02dpos' % (i+1)
                 setattr(self, name, st3d[name])
         except:
-            print 'failed reading st3d'
+            print('failed reading st3d')
             self.web_def = []
             self.DPs = np.array([])
             self.s = np.array([])
@@ -627,11 +635,11 @@ class ComputeDPsParam2(object):
         self.min_width = 0.
         self.ref_axis = 'linear'
 
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if hasattr(self, k):
                 setattr(self, k, v)
             else:
-                print 'unknown key %s' % k
+                print('unknown key %s' % k)
 
     def compute(self):
 
@@ -641,7 +649,7 @@ class ComputeDPsParam2(object):
         self.dom.add_blocks(Block(self.surface[:, :, 0],
                                   self.surface[:, :, 1],
                                   self.surface[:, :, 2]))
-        surforg = self.dom.blocks['block']._block2arr()[:, :, 0, :].copy()
+        surforg = list(self.dom.blocks.values())[0]._block2arr()[:, :, 0, :].copy()
         self.dom.rotate_z(self.struct_angle)
         if self.ref_axis == 'main_axis':
             x = self.x
@@ -657,7 +665,7 @@ class ComputeDPsParam2(object):
         self.pitch_axis = Curve(points=np.array([x, y, self.z]).T)
         self.pitch_axis.rotate_z(self.struct_angle)
 
-        surf = self.dom.blocks['block']._block2arr()[:, :, 0, :].copy()
+        surf = list(self.dom.blocks.values())[0]._block2arr()[:, :, 0, :].copy()
 
         self.afsorg = []
         for i in range(surforg.shape[1]):
@@ -751,8 +759,8 @@ class ComputeDPsParam2(object):
 
         DPs = self.DPs
         # check that ps and ss DPs are on the correct sides of the LE
-        ps = range(self.te_DPs[0], self.le_DPs[0] + 1)
-        ss = range(self.le_DPs[1], self.te_DPs[1] + 1)
+        ps = list(range(self.te_DPs[0], self.le_DPs[0] + 1))
+        ss = list(range(self.le_DPs[1], self.te_DPs[1] + 1))
         for i in range(self.ni):
             for j in ps:
                 try:
@@ -800,7 +808,7 @@ class ComputeDPsParam2(object):
         if isec is not None:
             ni = [isec]
         else:
-            ni = range(self.ni)
+            ni = list(range(self.ni))
 
         for i in ni:
             plt.title('r = %3.3f' % (self.z[i]))
@@ -952,9 +960,9 @@ class SplinedBladeStructureBase(Group):
 
     def configure(self):
 
-        print 'SplinedBladeStructure: No harm done, but configure is depreciated\n' + \
+        print('SplinedBladeStructure: No harm done, but configure is depreciated\n' + \
               'and replaced by pre_setup called automatically by OpenMDAO.\n'+\
-              'Ensure that you have OpenMDAO > v1.7.1 installed'
+              'Ensure that you have OpenMDAO > v1.7.1 installed')
 
     def pre_setup(self, problem):
         """
@@ -1356,7 +1364,7 @@ class BladeStructureProperties(Component):
                         desc='upper side pitch axis aft cap center curvature')
         self.add_output('pacc_ps_curv', np.zeros(self.nsec),
                         desc='lower side pitch axis aft cap center curvature')
-        self.add_output('thickness_diff', np.zeros((self.nsec, self.nDP/2)),
+        self.add_output('thickness_diff', np.zeros((self.nsec, self.nDP//2)),
                         desc='Difference between section thickness'
                              'and material thickness at each DP')
 
@@ -1409,7 +1417,7 @@ class BladeStructureProperties(Component):
         # compute difference between airfoil thickness and
         # total material thickness at the different DPs
         nr = int(self.nDP/2)
-        ri = range(self.nDP-1)
+        ri = list(range(self.nDP-1))
         self.thickness_diff = np.zeros((self.nsec, nr))
         self.shape_thickness = np.zeros((self.nsec, nr))
         # loop DP points from TE to LE

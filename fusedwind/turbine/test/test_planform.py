@@ -16,7 +16,7 @@ def configure(size_in=10, size_out=20):
     p = Problem(root=Group())
     r = p.root.add('redist', PGLRedistributedPlanform('_st', size_in, s_new), promotes=['*'])
     p.setup()
-    for k, v in pf.iteritems():
+    for k, v in list(pf.items()):
         r.params[k] = v
 
     return p
